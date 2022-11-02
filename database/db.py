@@ -22,14 +22,21 @@ class Database:
 
         return rows
     
+    def getRows(self, key):
+        self.executeFunction(f"SELECT * FROM {self.tableName} WHERE {self.generateKeyStatement(key)}")
+        rows = self.cursor.fetchall()
+
+        return rows
+    
     def update(self, properties, key):
         values = ','.join([f'{item}={properties[item]}' for item in properties])
-        keyStatement = f'{key.keys()[0]}={key.values()[0]}'
-        self.executeFunction(f"UPDATE {self.tableName} SET {values} WHERE {keyStatement}")
+        self.executeFunction(f"UPDATE {self.tableName} SET {values} WHERE {self.generateKeyStatement(key)}")
     
     def delete(self, key):
-        keyStatement = f'{key.keys()[0]}={key.values()[0]}'
-        self.executeFunction(f"DELETE FROM {self.tableName} WHERE {keyStatement}")
+        self.executeFunction(f"DELETE FROM {self.tableName} WHERE {self.generateKeyStatement(key)}")
+    
+    def generateKeyStatement(key):
+        return f'{key.keys()[0]}={key.values()[0]}'
 
     def deleteAll(self):
         self.executeFunction(f"DELETE FROM {self.tableName}")
