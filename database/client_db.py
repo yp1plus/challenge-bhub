@@ -37,6 +37,13 @@ class ClientDatabase:
         client = Client(row[0], row[1], row[2], row[3], row[4])
         return client
     
+    def clientExists(self, companyName):
+        try:
+            self.getClient(companyName)
+            return True
+        except:
+            return False
+    
     def update(self, client):
         properties = {
             'phoneNumber': client.phoneNumber,
