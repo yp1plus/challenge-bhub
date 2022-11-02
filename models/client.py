@@ -10,21 +10,21 @@ class Client:
     self.registrationDate = self.validateDate(registrationDate)
     self.invoicing = self.validateNumber(invoicing)
   
-  def validatePhoneNumber(phoneNumber):
+  def validatePhoneNumber(self, phoneNumber):
     number = phonenumbers.parse(phoneNumber)
     if (phonenumbers.is_valid_number(number)):
       return phoneNumber
     else:
       raise ValueError("phone number is invalid")
   
-  def validateDate(registrationDate):
+  def validateDate(self, registrationDate):
     try:
       parser.parse(registrationDate)
       return registrationDate
     except ValueError:
       raise ValueError("date format is invalid")
   
-  def validateNumber(invoicing):
+  def validateNumber(self, invoicing):
     try:
       return float(invoicing)
     except ValueError:

@@ -29,11 +29,7 @@ class ClientDatabase:
         return clients
     
     def getClient(self, companyName):
-        rows = self.database.getRows(companyName)
-        if (len(rows) == 0):
-            raise FileNotFoundError("This client doesn't exist on the database")
-        
-        row = rows[0]
+        row = self.database.getRow({'companyName': companyName})
         client = Client(row[0], row[1], row[2], row[3], row[4])
         return client
     

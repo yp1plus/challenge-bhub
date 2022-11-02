@@ -7,36 +7,55 @@ class Database:
         self.tableName = tableName
         
     def executeFunction(self, function):
+        self.connection = sqlite3.connect('bhub.db')
+        self.cursor = self.connection.cursor()
         self.cursor.execute(function)
+    
+    def closeConnection(self):
         self.connection.commit()
         self.connection.close()
     
+    def makeFullRequest(self, function):
+        self.executeFunction(function)
+        self.closeConnection()
+        
     def insert(self, object):
-        values = ','.join([str(value) for value in object.values()])
+        array = []
+        for value in object.values():
+            if type(value) == str:
+                array.append('\'' + value + '\'')
+            else:
+                array.append(str(value))
+        values = ','.join(array)
         values = '(' + values + ')'
-        self.executeFunction(f"INSERT INTO {self.tableName} VALUES {values}")
+        self.makeFullRequest(f"INSERT INTO {self.tableName} VALUES {values}")
     
     def getRows(self):
         self.executeFunction(f"SELECT * FROM {self.tableName}")
         rows = self.cursor.fetchall()
+        self.closeConnection()
 
         return rows
     
-    def getRows(self, key):
+    def getRow(self, key):
         self.executeFunction(f"SELECT * FROM {self.tableName} WHERE {self.generateKeyStatement(key)}")
-        rows = self.cursor.fetchall()
+        row = self.cursor.fetchone()
+        if (row == None):
+            raise FileNotFoundError("This object doesn't exist on the database")
+        self.closeConnection()
 
-        return rows
+        return row
     
     def update(self, properties, key):
         values = ','.join([f'{item}={properties[item]}' for item in properties])
-        self.executeFunction(f"UPDATE {self.tableName} SET {values} WHERE {self.generateKeyStatement(key)}")
+        self.makeFullRequest(f"UPDATE {self.tableName} SET {values} WHERE {self.generateKeyStatement(key)}")
     
     def delete(self, key):
-        self.executeFunction(f"DELETE FROM {self.tableName} WHERE {self.generateKeyStatement(key)}")
+        self.makeFullRequest(f"DELETE FROM {self.tableName} WHERE {self.generateKeyStatement(key)}")
     
-    def generateKeyStatement(key):
-        return f'{key.keys()[0]}={key.values()[0]}'
-
     def deleteAll(self):
-        self.executeFunction(f"DELETE FROM {self.tableName}")
+        self.makeFullRequest(f"DELETE FROM {self.tableName}")
+    
+    def generateKeyStatement(self, key):
+        for x, y in key.items():
+            return f"{x}=\'{y}\'"

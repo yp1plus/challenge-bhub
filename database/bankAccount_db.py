@@ -5,7 +5,7 @@ from database.db import Database
 class BankAccountDatabase:
     def __init__(self):
         self.NAME = 'bankAccounts'
-        self.database = Database()
+        self.database = Database(self.NAME)
     
     def createTable(self):
         self.database.executeFunction(f"CREATE TABLE IF NOT EXISTS {self.NAME} (id TEXT PRIMARY KEY, companyName TEXT NOT NULL, codeBank TEXT, agencyNumber TEXT, accountNumber TEXT, FOREIGN KEY(companyName) REFERENCES clients (companyName))")
