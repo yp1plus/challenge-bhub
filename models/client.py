@@ -34,10 +34,10 @@ class Client:
     return [self.companyName, self.phoneNumber, self.address, self.registrationDate, self.invoicing]
 
   def serialize(self):
-    return json.dumps({
+    return {
       'companyName': self.companyName,
       'phoneNumber': self.phoneNumber,
       'address': self.address,
       'registrationDate': self.registrationDate,
       'invoicing': self.invoicing,
-    })
+    }

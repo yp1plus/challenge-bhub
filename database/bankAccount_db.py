@@ -20,13 +20,21 @@ class BankAccountDatabase:
     def insert(self, bankAccount):
         self.database.insert(bankAccount)
     
-    def view(self):
+    def viewTable(self):
         rows = self.database.getRows()
         bankAccounts = []
         for row in rows:
-            bankAccount = BankAccount(row[0], row[1], row[2], row[3])
+            bankAccount = BankAccount(row[0], row[1], row[2], row[3], row[4])
             bankAccounts.append(bankAccount)
         return bankAccounts
+    
+    def getBankAccounts(self, companyName):
+        bankAccounts = [bankAccount.serialize() for bankAccount in self.viewTable()]
+        def checkCompanyName(bankAccount):
+            return bankAccount['companyName'] == companyName
+        bankAccountsFromClient = list(filter(checkCompanyName, bankAccounts))
+
+        return bankAccountsFromClient
 
     def update(self, bankAccount):
         properties = {

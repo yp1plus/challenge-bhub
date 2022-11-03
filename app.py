@@ -16,10 +16,10 @@ bankAccountDB.createTable()
 def index():
     return "Welcome to BHUB API"
 
-@app.route("/clients", methods=['POST'])
+@app.route('/clients', methods=['POST'])
 def postRequest():
    statusCode = 200
-   message = ''
+   body = ''
    try:
       requestData = request.get_json()
 
@@ -31,23 +31,49 @@ def postRequest():
       for bankAccount in requestData['bankAccounts']:
          bankAccounts.append(BankAccount(requestData['companyName'], bankAccount['codeBank'], bankAccount['agencyNumber'], bankAccount['accountNumber']))
       
-      message = client.serialize()
+      clientJson = client.serialize()
       clientDB.insert(client)
       bankAccountsJson = []
       for bankAccount in bankAccounts:
          bankAccountsJson.append(bankAccount.serialize())
          bankAccountDB.insert(bankAccount)
-      message += json.dumps({
-         "bankAccounts": bankAccountsJson
-      })
+      clientJson['bankAccounts'] = bankAccountsJson
+      body = clientJson
    except Exception as e:
       statusCode = 400
-      message = e.__str__()
+      body = e.__str__()
 
-   return jsonify({
-      'status_code': statusCode,
-      'message': message,
-   })
+   return jsonify(body), statusCode
+
+@app.route('/clients', methods=['GET'])
+def getClients():
+   statusCode = 200
+   body = ''
+   try:
+      clients = []
+      for client in clientDB.viewTable():
+         clientJson = client.serialize()
+         clientJson['bankAccounts'] = bankAccountDB.getBankAccounts(clientJson['companyName'])
+         clients.append(clientJson)
+      body = clients
+   except Exception as e:
+      body = e.__str__()
+      statusCode = 400
+   return jsonify(body), statusCode
+
+@app.route('/clients/<companyName>', methods=['GET'])
+def getClient(companyName):
+   statusCode = 200
+   body = ''
+   try:
+      client = clientDB.getClient(companyName)
+      clientJson = client.serialize()
+      clientJson['bankAccounts'] = bankAccountDB.getBankAccounts(clientJson['companyName'])
+      body = clientJson
+   except Exception as e:
+      body = e.__str__()
+      statusCode = 400
+   return jsonify(body), statusCode
 
 if __name__ == '__main__':
     app.run()
