@@ -1,78 +1,77 @@
-import json
 from flask import Flask, request, jsonify
-from database.bankAccount_db import BankAccountDatabase
-from database.client_db import ClientDatabase
-from models.client import Client
-from models.bankAccount import BankAccount
+from api import API
 
 app = Flask(__name__)
 
-clientDB = ClientDatabase()
-clientDB.createTable()
-bankAccountDB = BankAccountDatabase()
-bankAccountDB.createTable()
+api = API()
 
 @app.route("/")
-def index():
-    return "Welcome to BHUB API"
+def initialize():
+   return api.index()
 
-@app.route('/clients', methods=['POST'])
-def postRequest():
+@app.route('/clients', methods=['POST', 'GET'])
+def controlClients():
    statusCode = 200
    body = ''
    try:
-      requestData = request.get_json()
-
-      if (clientDB.clientExists(requestData['companyName'])):
-         raise Exception(f"Client with name {requestData['companyName']} already exists!")
-         
-      client = Client(requestData['companyName'], requestData['phoneNumber'], requestData['address'], requestData['registrationDate'], requestData['invoicing'])
-      bankAccounts = []
-      for bankAccount in requestData['bankAccounts']:
-         bankAccounts.append(BankAccount(requestData['companyName'], bankAccount['codeBank'], bankAccount['agencyNumber'], bankAccount['accountNumber']))
-      
-      clientJson = client.serialize()
-      clientDB.insert(client)
-      bankAccountsJson = []
-      for bankAccount in bankAccounts:
-         bankAccountsJson.append(bankAccount.serialize())
-         bankAccountDB.insert(bankAccount)
-      clientJson['bankAccounts'] = bankAccountsJson
-      body = clientJson
+      if (request.method == 'POST'):
+         requestData = request.get_json()
+         body = api.insertClient(requestData)
+      elif (request.method == 'GET'):
+         body = api.getClients()
    except Exception as e:
       statusCode = 400
       body = e.__str__()
 
    return jsonify(body), statusCode
 
-@app.route('/clients', methods=['GET'])
-def getClients():
+@app.route('/clients/<companyName>', methods=['GET', 'PUT', 'DELETE'])
+def controlClient(companyName):
    statusCode = 200
    body = ''
    try:
-      clients = []
-      for client in clientDB.viewTable():
-         clientJson = client.serialize()
-         clientJson['bankAccounts'] = bankAccountDB.getBankAccounts(clientJson['companyName'])
-         clients.append(clientJson)
-      body = clients
+      if (request.method == 'GET'):
+         body = api.getClient(companyName)
+      elif (request.method == 'PUT'):
+         requestData = request.get_json()
+         body = api.updateClient(companyName, requestData)
+      elif (request.method == 'DELETE'):
+         api.deleteClient(companyName)
+         body  = 'Deleted with success'
    except Exception as e:
-      body = e.__str__()
       statusCode = 400
+      body = e.__str__()
    return jsonify(body), statusCode
 
-@app.route('/clients/<companyName>', methods=['GET'])
-def getClient(companyName):
+@app.route('/clients/<companyName>/bankAccounts', methods=['GET', 'POST'])
+def controlBankAccounts(companyName):
    statusCode = 200
    body = ''
    try:
-      client = clientDB.getClient(companyName)
-      clientJson = client.serialize()
-      clientJson['bankAccounts'] = bankAccountDB.getBankAccounts(clientJson['companyName'])
-      body = clientJson
+      if (request.method == 'GET'):
+         body = api.getBankAccounts(companyName)
+      elif (request.method == 'POST'):
+         requestData = request.get_json()
+         body = api.insertBankAccount(companyName, requestData)
    except Exception as e:
-      body = e.__str__()
       statusCode = 400
+      body = e.__str__()
+
+   return jsonify(body), statusCode
+
+@app.route('/clients/bankAccounts/<id>', methods=['GET', 'DELETE'])
+def controlBankAccount(id):
+   statusCode = 200
+   body = ''
+   try:
+      if (request.method == 'GET'):
+         body = api.getBankAccount(id)
+      elif (request.method == 'DELETE'):
+         api.deleteBankAccount(id)
+         body = 'Deleted with success'
+   except Exception as e:
+      statusCode = 400
+      body = e.__str__()
    return jsonify(body), statusCode
 
 if __name__ == '__main__':
