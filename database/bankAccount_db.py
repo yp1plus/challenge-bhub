@@ -1,17 +1,19 @@
 import json
 from models.bankAccount import BankAccount
 from database.db import Database
+from database.client_db import ClientDatabase
 
 class BankAccountDatabase:
     def __init__(self):
         self.NAME = 'bankAccounts'
         self.database = Database(self.NAME)
+        self.createTable()
     
     def createTable(self):
-        self.database.executeFunction(f"CREATE TABLE IF NOT EXISTS {self.NAME} (id TEXT PRIMARY KEY, companyName TEXT NOT NULL, codeBank TEXT, agencyNumber TEXT, accountNumber TEXT, FOREIGN KEY(companyName) REFERENCES clients (companyName))")
+        self.database.executeFunction(f"CREATE TABLE IF NOT EXISTS {self.NAME} (id TEXT PRIMARY KEY, companyName TEXT NOT NULL, codeBank TEXT, agencyNumber TEXT, accountNumber TEXT)")
 
     def populateTable(self):
-        with open('database/bankAccounts.json', 'r') as bankAccounts:
+        with open('data/bankAccounts.json', 'r') as bankAccounts:
             data = json.load(bankAccounts)
         
         for bankAccount in data:
@@ -35,19 +37,19 @@ class BankAccountDatabase:
         bankAccountsFromClient = list(filter(checkCompanyName, bankAccounts))
 
         return bankAccountsFromClient
-
-    def update(self, bankAccount):
-        properties = {
-            'agencyNumber': bankAccount.agencyNumber,
-            'accountNumber': bankAccount.accountNumber
-        }
-        key = {
-            'id': bankAccount.id
-        }
-        self.database.update(properties, key)
+    
+    def getBankAccount(self, id):
+        row = self.database.getRow({'id': id})
+        bankAccount = BankAccount(row[0], row[1], row[2], row[3], row[4])
+        return bankAccount
 
     def delete(self, id):
         self.database.delete({'id': id})
+    
+    def deleteAllFromClient(self, companyName):
+        bankAccounts = self.getBankAccounts(companyName)
+        for bankAccount in bankAccounts:
+            self.delete(bankAccount['id'])
 
     def deleteAll(self):
         self.database.deleteAll()
