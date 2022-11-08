@@ -1,4 +1,5 @@
 import json
+import os
 from models.client import Client
 from database.db import Database
 
@@ -6,12 +7,13 @@ class ClientDatabase:
     def __init__(self):
         self.NAME = 'clients'
         self.database = Database(self.NAME)
+        self.createTable()
     
     def createTable(self):
         self.database.executeFunction(f"CREATE TABLE IF NOT EXISTS {self.NAME} (companyName TEXT PRIMARY KEY, phoneNumber TEXT, address TEXT, registrationDate TEXT, invoicing REAL)")
 
     def populateTable(self):
-        with open('database/clients.json', 'r') as clients:
+        with open('data/clients.json', 'r') as clients:
             data = json.load(clients)
         
         for client in data:
