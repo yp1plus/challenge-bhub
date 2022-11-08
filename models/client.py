@@ -1,4 +1,3 @@
-import json
 import phonenumbers
 from dateutil import parser
 
@@ -10,19 +9,28 @@ class Client:
     self.registrationDate = self.validateDate(registrationDate)
     self.invoicing = self.validateNumber(invoicing)
   
+  def setPhoneNumber(self, phoneNumber):
+    self.phoneNumber = self.validatePhoneNumber(phoneNumber)
+  
+  def setInvoicing(self, invoicing):
+    self.invoicing = self.validateNumber(invoicing)
+  
+  def setAddress(self, address):
+    self.address = address
+
   def validatePhoneNumber(self, phoneNumber):
-    number = phonenumbers.parse(phoneNumber)
+    number = phonenumbers.parse(phoneNumber, 'BR')
     if (phonenumbers.is_valid_number(number)):
       return phoneNumber
     else:
-      raise ValueError("phone number is invalid")
+      raise ValueError("Phone number is invalid")
   
   def validateDate(self, registrationDate):
     try:
       parser.parse(registrationDate)
       return registrationDate
     except ValueError:
-      raise ValueError("date format is invalid")
+      raise ValueError("Date format is invalid")
   
   def validateNumber(self, invoicing):
     try:
