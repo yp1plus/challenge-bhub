@@ -1,13 +1,14 @@
 import sqlite3
 
 class Database:
+    name = 'bhub.db'
     def __init__(self, tableName):
-        self.connection = sqlite3.connect('bhub.db')
+        self.connection = sqlite3.connect(Database.name)
         self.cursor = self.connection.cursor()
         self.tableName = tableName
         
     def executeFunction(self, function):
-        self.connection = sqlite3.connect('bhub.db')
+        self.connection = sqlite3.connect(Database.name)
         self.cursor = self.connection.cursor()
         self.cursor.execute(function)
     
@@ -47,7 +48,13 @@ class Database:
         return row
     
     def update(self, properties, key):
-        values = ','.join([f'{item}={properties[item]}' for item in properties])
+        array = []
+        for item in properties:
+            if (type(properties[item]) == str):
+                array.append(f"{item}='{properties[item]}'")
+            else:
+                array.append(f"{item}={properties[item]}")
+        values = ','.join(array)
         self.makeFullRequest(f"UPDATE {self.tableName} SET {values} WHERE {self.generateKeyStatement(key)}")
     
     def delete(self, key):
